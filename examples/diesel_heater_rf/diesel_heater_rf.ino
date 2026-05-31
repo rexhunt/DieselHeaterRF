@@ -12,9 +12,11 @@
  * 
  */
 
-#include "DieselHeaterRF.h"
+#include "../../DieselHeaterRF.h"
 
 #define HEATER_POLL_INTERVAL  4000
+
+#define HEATER_ADDRESS 0x6DC35C0D
 
 uint32_t heaterAddr; // Heater address is a 32 bit unsigned int. Use the findAddress() to get your heater's address.
 
@@ -27,9 +29,19 @@ void setup() {
 
   heater.begin();
 
+//Uses predetermined address if available
+#ifndef HEATER_ADDRESS
+
   Serial.println("Started pairing, press and hold the pairing button on the heater's LCD panel...");
 
   heaterAddr = heater.findAddress(60000UL);
+#else
+  //Send heater wakeup code - Possibly not needed
+
+  heaterAddr = HEATER_ADDRESS;
+  Serial.print("Heater address preset to: ");
+  Serial.println(heaterAddr, HEX);
+#endif
 
   if (heaterAddr) {
     Serial.print("Got address: ");
@@ -38,7 +50,11 @@ void setup() {
     // Store the address somewhere, eg. NVS
   } else {
     Serial.println("Failed to find a heater");   
-    while(1) {}
+    Serial.println("Looping to listen, no action taken");  
+    char buf[26]; 
+    while(1) {
+          heaterAddr = heater.findAddress(60000UL);
+      }
   }
   
 }
